@@ -3,7 +3,6 @@ import subprocess
 import requests
 import hashlib
 import os
-import tarfile
 
 def file_checksum_matches(image_path, expected_checksum):
     sha256 = hashlib.sha256()
@@ -39,7 +38,7 @@ def install_balena_etcher():
 
 def is_etcher_installed():
     try:
-        subprocess.run(['balena', '--version'], check=True, stdout=subprocess.PIPE)
+        subprocess.run(['balena-cli/balena', '--version'], check=True, stdout=subprocess.PIPE)
         return True
     except (FileNotFoundError, subprocess.CalledProcessError):
         return False
@@ -54,8 +53,7 @@ def install_etcher():
             f.write(response.content)
 
         print("Unpacking Balena CLI...")
-        with tarfile.open(balena_cli_zip, "r:gz") as tar:
-            tar.extractall()
+        subprocess.run(['unzip', balena_cli_zip], check=True)  # Using unzip here
 
         print("Balena CLI installed successfully.")
     except Exception as e:
@@ -81,4 +79,3 @@ def run_flash_script_from_yaml(yaml_file_path):
 if __name__ == '__main__':
     yaml_file_path = 'config.yaml'
     run_flash_script_from_yaml(yaml_file_path)
-

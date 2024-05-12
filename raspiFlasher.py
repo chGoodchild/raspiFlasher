@@ -20,7 +20,8 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
 
     # Flash the SD card with the Raspberry Pi OS image
     print("Flashing the SD card with the image...")
-    subprocess.run(['balena-etcher-cli', image_path, '--drive', sd_card, '--yes'], check=True)
+    subprocess.run(['balena-cli/balena', 'os', 'image', image_path, sd_card, '--yes'], check=True)
+
     
     # Mount the boot partition (assumed to be the first partition)
     boot_partition = sd_card + '1'  # Adjust according to your system (e.g., /dev/sdb1)
