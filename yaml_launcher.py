@@ -27,16 +27,26 @@ def download_image(image_url, image_path, expected_checksum):
         else:
             raise Exception(f"Failed to download the file: Status code {response.status_code}")
 
+
 def install_balena_etcher():
     # Check if Balena Etcher is installed
-    try:
-        subprocess.run(['balena-etcher-electron', '--version'], check=True, stdout=subprocess.PIPE)
-        print("Balena Etcher is already installed.")
-    except FileNotFoundError:
+    if not is_etcher_installed():
         print("Balena Etcher is not installed, proceeding with installation...")
         install_etcher()
-    except subprocess.CalledProcessError:
-        print("Balena Etcher is installed but not working properly.")
+        # Add the installation path to the system PATH
+        os.environ["PATH"] += os.pathsep + '/opt/balenaEtcher'
+        if not is_etcher_installed():
+            raise Exception("Failed to install Balena Etcher.")
+    else:
+        print("Balena Etcher is already installed.")
+
+def is_etcher_installed():
+    """Check if Balena Etcher is in PATH and can be executed."""
+    try:
+        subprocess.run(['balena-etcher-electron', '--version'], check=True, stdout=subprocess.PIPE)
+        return True
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return False
 
 def install_etcher():
     # Download and execute the script to add the Balena Etcher repository
@@ -47,8 +57,7 @@ def install_etcher():
     # Install Etcher
     subprocess.run(['sudo', 'apt-get', 'install', 'balena-etcher-electron', '-y'], check=True)
     print("Installation of Balena Etcher completed.")
-    
-
+ 
 def run_flash_script_from_yaml(yaml_file_path):
     # Load the YAML file to get configuration settings
     with open(yaml_file_path, 'r') as file:
