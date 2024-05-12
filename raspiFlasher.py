@@ -2,6 +2,7 @@ import sys
 import subprocess
 import os
 import hashlib
+import getpass
 
 def verify_image_checksum(image_path, expected_checksum):
     print("Verifying image checksum...")
@@ -18,22 +19,29 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
     # Verify the image checksum
     verify_image_checksum(image_path, expected_checksum)
 
+    # List available disk devices and ask for user confirmation
+    print("Available disk devices:")
+    subprocess.run(['lsblk'])
+    confirm = input(f"Are you sure you want to flash the SD card at {sd_card}? (yes/no): ")
+    if confirm.lower() != 'yes':
+        print("Flashing aborted.")
+        return
+
     # Flash the SD card with the Raspberry Pi OS image using dd
     print("Flashing the SD card with the image...")
     dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync"
     subprocess.run(dd_command, shell=True, check=True)
     
-    # Mount the boot partition (assumed to be the first partition)
-    boot_partition = sd_card + '1'  # Adjust according to your system (e.g., /dev/sdb1)
-    subprocess.run(['mount', boot_partition, '/mnt'], check=True)
-    
     # Enable SSH access
+    username = getpass.getuser()  # Gets the current system's username
     print("Enabling SSH access...")
-    with open('/mnt/ssh', 'w') as ssh_file:
+    ssh_file_path = f'/media/{username}/bootfs/ssh'  # Use the dynamic path
+    with open(ssh_file_path, 'w') as ssh_file:
         pass  # Create an empty file named 'ssh'
-    
+
     # Setup Wi-Fi
     print("Configuring Wi-Fi settings...")
+    wpa_file_path = f'/media/{username}/bootfs/wpa_supplicant.conf'
     wpa_config = f"""
 country={country_code}
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -43,13 +51,12 @@ network={{
     psk="{wifi_password}"
     key_mgmt=WPA-PSK
 }}
-"""
-    with open('/mnt/wpa_supplicant.conf', 'w') as wpa_file:
+    """
+    with open(wpa_file_path, 'a') as wpa_file:
         wpa_file.write(wpa_config)
-    
-    # Unmount the boot partition
-    subprocess.run(['umount', '/mnt'], check=True)
+
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 6:
@@ -63,3 +70,4 @@ if __name__ == '__main__':
     expected_checksum = sys.argv[5]
 
     flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum)
+
