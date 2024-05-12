@@ -4,6 +4,18 @@ import os
 import hashlib
 import getpass
 
+def configure_user(sd_card, username, plain_password):
+    # Encrypt the password
+    from subprocess import Popen, PIPE
+    process = Popen(['openssl', 'passwd', '-6'], stdin=PIPE, stdout=PIPE, stderr=PIPE, text=True)
+    encrypted_password, _ = process.communicate(input=plain_password)
+
+    # Path to userconf.txt on the boot partition
+    userconf_path = f'/media/{username}/bootfs/userconf.txt'
+    with open(userconf_path, 'w') as f:
+        f.write(f'{username}:{encrypted_password.strip()}')
+
+
 def verify_image_checksum(image_path, expected_checksum):
     print("Verifying image checksum...")
     sha256 = hashlib.sha256()
@@ -75,6 +87,11 @@ network={{
     """
     with open(wpa_file_path, 'a') as wpa_file:
         wpa_file.write(wpa_config)
+
+    # Example usage in your main script
+    username = input("Enter the desired username for Raspberry Pi: ")
+    password = getpass.getpass("Enter the desired password for Raspberry Pi: ")
+    configure_user(sd_card, username, password)
 
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
