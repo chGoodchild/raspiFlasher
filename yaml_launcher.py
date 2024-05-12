@@ -4,7 +4,6 @@ import requests
 import hashlib
 import os
 
-
 def file_checksum_matches(image_path, expected_checksum):
     sha256 = hashlib.sha256()
     with open(image_path, 'rb') as f:
@@ -14,7 +13,6 @@ def file_checksum_matches(image_path, expected_checksum):
     return calculated_checksum == expected_checksum
 
 def download_image(image_url, image_path, expected_checksum):
-    # Check if the file exists and the checksum is correct
     if os.path.exists(image_path) and file_checksum_matches(image_path, expected_checksum):
         print(f"File already exists and checksum matches: {image_path}")
     else:
@@ -24,11 +22,32 @@ def download_image(image_url, image_path, expected_checksum):
             with open(image_path, 'wb') as f:
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
-            # Verify checksum after download
             if not file_checksum_matches(image_path, expected_checksum):
                 raise Exception("Downloaded file checksum does not match expected checksum.")
         else:
             raise Exception(f"Failed to download the file: Status code {response.status_code}")
+
+def install_balena_etcher():
+    # Check if Balena Etcher is installed
+    try:
+        subprocess.run(['balena-etcher-electron', '--version'], check=True, stdout=subprocess.PIPE)
+        print("Balena Etcher is already installed.")
+    except FileNotFoundError:
+        print("Balena Etcher is not installed, proceeding with installation...")
+        install_etcher()
+    except subprocess.CalledProcessError:
+        print("Balena Etcher is installed but not working properly.")
+
+def install_etcher():
+    # Download and execute the script to add the Balena Etcher repository
+    subprocess.run(['curl', '-fsSL', 'https://dl.cloudsmith.io/public/balena/etcher/setup.deb.sh', '-o', 'etcher_setup.sh'], check=True)
+    subprocess.run(['sudo', 'bash', 'etcher_setup.sh'], check=True)
+    # Update the package list
+    subprocess.run(['sudo', 'apt-get', 'update'], check=True)
+    # Install Etcher
+    subprocess.run(['sudo', 'apt-get', 'install', 'balena-etcher-electron', '-y'], check=True)
+    print("Installation of Balena Etcher completed.")
+    
 
 def run_flash_script_from_yaml(yaml_file_path):
     # Load the YAML file to get configuration settings
@@ -43,12 +62,15 @@ def run_flash_script_from_yaml(yaml_file_path):
     wifi_password = config['wifi_password']
     expected_checksum = config['expected_checksum']
 
+    # Ensure Balena Etcher is installed
+    install_balena_etcher()
+
     # Check and download the image if necessary
     download_image(image_url, image_path, expected_checksum)
 
     # Construct the command to run the flash script
     command = [
-        'python', 'flash_sd_card.py', 
+        'python3', 'raspiFlasher.py', 
         sd_card, image_path, ssid, wifi_password, expected_checksum
     ]
     
@@ -60,4 +82,3 @@ if __name__ == '__main__':
     # Specify the path to your YAML configuration file
     yaml_file_path = 'config.yaml'
     run_flash_script_from_yaml(yaml_file_path)
-
