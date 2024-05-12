@@ -18,10 +18,10 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
     # Verify the image checksum
     verify_image_checksum(image_path, expected_checksum)
 
-    # Flash the SD card with the Raspberry Pi OS image
+    # Flash the SD card with the Raspberry Pi OS image using dd
     print("Flashing the SD card with the image...")
-    subprocess.run(['balena-cli/balena', 'os', 'image', image_path, sd_card, '--yes'], check=True)
-
+    dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync"
+    subprocess.run(dd_command, shell=True, check=True)
     
     # Mount the boot partition (assumed to be the first partition)
     boot_partition = sd_card + '1'  # Adjust according to your system (e.g., /dev/sdb1)
@@ -63,4 +63,3 @@ if __name__ == '__main__':
     expected_checksum = sys.argv[5]
 
     flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum)
-

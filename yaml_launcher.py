@@ -69,7 +69,9 @@ def run_flash_script_from_yaml(yaml_file_path):
     ssid = config['ssid']
     wifi_password = config['wifi_password']
     expected_checksum = config['expected_checksum']
-    install_balena_etcher()
+    
+    # install_balena_etcher()
+    
     download_image(image_url, image_path, expected_checksum)
     command = ['python3', 'raspiFlasher.py', sd_card, image_path, ssid, wifi_password, expected_checksum]
 
