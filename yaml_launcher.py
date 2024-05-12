@@ -1,4 +1,9 @@
+import yaml
+import subprocess
+import requests
 import hashlib
+import os
+
 
 def file_checksum_matches(image_path, expected_checksum):
     sha256 = hashlib.sha256()
