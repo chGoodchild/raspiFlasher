@@ -1,0 +1,6 @@
+sd_card: "/dev/sdX"  # Replace with your actual SD card device
+image_url: "https://example.com/path/to/image.img"  # URL of the image to download
+image_path: "/path/to/downloaded/raspberry-pi-image.img"  # Local path to save the downloaded image
+ssid: "YourNetworkSSID"
+wifi_password: "YourNetworkPassword"
+expected_checksum: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"

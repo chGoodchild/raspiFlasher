@@ -1,8 +1,23 @@
 import sys
 import subprocess
 import os
+import hashlib
 
-def flash_sd_card(sd_card, image_path, ssid, wifi_password, country_code='US'):
+def verify_image_checksum(image_path, expected_checksum):
+    print("Verifying image checksum...")
+    sha256 = hashlib.sha256()
+    with open(image_path, 'rb') as f:
+        for block in iter(lambda: f.read(4096), b""):
+            sha256.update(block)
+    calculated_checksum = sha256.hexdigest()
+    if calculated_checksum != expected_checksum:
+        raise ValueError("Checksum verification failed: the image file may be corrupted or altered.")
+    print("Checksum verification passed.")
+
+def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, country_code='US'):
+    # Verify the image checksum
+    verify_image_checksum(image_path, expected_checksum)
+
     # Flash the SD card with the Raspberry Pi OS image
     print("Flashing the SD card with the image...")
     subprocess.run(['balena-etcher-cli', image_path, '--drive', sd_card, '--yes'], check=True)
@@ -36,13 +51,15 @@ network={{
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
 if __name__ == '__main__':
-    if len(sys.argv) != 5:
-        print("Usage: python flash_sd_card.py <SD_CARD> <IMAGE_PATH> <SSID> <WIFI_PASSWORD>")
+    if len(sys.argv) != 6:
+        print("Usage: python flash_sd_card.py <SD_CARD> <IMAGE_PATH> <SSID> <WIFI_PASSWORD> <EXPECTED_CHECKSUM>")
         sys.exit(1)
 
     sd_card = sys.argv[1]
     image_path = sys.argv[2]
     ssid = sys.argv[3]
     wifi_password = sys.argv[4]
+    expected_checksum = sys.argv[5]
 
-    flash_sd_card(sd_card, image_path, ssid, wifi_password)
+    flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum)
+
