@@ -33,8 +33,30 @@ def unmount_sd_card(sd_card):
     for part in ['1', '2']:  # Extend this list if there are more partitions
         subprocess.run(['sudo', 'umount', f'{sd_card}{part}'], stderr=subprocess.DEVNULL)
 
-def test_sd_card_with_badblocks(sd_card):
+def create_partitions(sd_card):
+    """Create partitions on the SD card after confirming it is bad-block free."""
+    print("Creating partition table and partitions...")
+    # Creating a new GPT partition table
+    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mklabel', 'gpt'], check=True)
+
+    # Creating a small FAT32 boot partition of 256MB
+    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'fat32', '1MiB', '257MiB'], check=True)
+    subprocess.run(['sudo', 'parted', '-s', sd_card, 'set', '1', 'boot', 'on'], check=True)  # Mark as bootable
+
+    # Creating a larger Linux filesystem partition for the remaining space
+    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'ext4', '257MiB', '100%'], check=True)
+
+    # Formatting the partitions
+    format_partitions(sd_card)
+
+def format_partitions(sd_card):
+    print("Formatting partitions...")
+    # Format the boot partition to FAT32
+    subprocess.run(['sudo', 'mkfs.vfat', f'{sd_card}1'], check=True)
+    # Format the main partition to EXT4
+    subprocess.run(['sudo', 'mkfs.ext4', f'{sd_card}2'], check=True)
     
+def test_sd_card_with_badblocks(sd_card):
     unmount_sd_card(sd_card)
 
     print("Testing SD card for bad blocks...")
@@ -42,6 +64,9 @@ def test_sd_card_with_badblocks(sd_card):
         subprocess.run(['sudo', 'badblocks', '-wsv', sd_card], check=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError("Bad blocks were found on the SD card.")
+
+    print("No bad blocks found, proceeding to partition the SD card.")
+    create_partitions(sd_card)
 
 def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, country_code='US'):
     # Verify the image checksum
