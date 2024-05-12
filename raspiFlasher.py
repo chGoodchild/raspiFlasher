@@ -15,7 +15,16 @@ def verify_image_checksum(image_path, expected_checksum):
         raise ValueError("Checksum verification failed: the image file may be corrupted or altered.")
     print("Checksum verification passed.")
 
+def unmount_sd_card(sd_card):
+    """Attempt to unmount all partitions of the SD card."""
+    print(f"Unmounting all partitions on {sd_card}")
+    for part in ['1', '2']:  # Extend this list if there are more partitions
+        subprocess.run(['sudo', 'umount', f'{sd_card}{part}'], stderr=subprocess.DEVNULL)
+
 def test_sd_card_with_badblocks(sd_card):
+    
+    unmount_sd_card(sd_card)
+
     print("Testing SD card for bad blocks...")
     try:
         subprocess.run(['sudo', 'badblocks', '-wsv', sd_card], check=True)
