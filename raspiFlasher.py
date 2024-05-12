@@ -69,6 +69,8 @@ network={{
     ssid="{ssid}"
     psk="{wifi_password}"
     key_mgmt=WPA-PSK
+    disabled=0
+    priority=1
 }}
     """
     with open(wpa_file_path, 'a') as wpa_file:
