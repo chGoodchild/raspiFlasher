@@ -54,11 +54,11 @@ Once you have the SD card path, SSID, and Wi-Fi password, update your `config.ya
 
 ```yaml
 sd_card: "/dev/sdb"
-image_url: "https://example.com/path/to/image.img"
-image_path: "/path/to/downloaded/raspberry-pi-image.img"
-ssid: "YourNetworkSSID"
-wifi_password: "YourNetworkPassword"
-expected_checksum: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+image_url: "https://downloads.raspberrypi.com/raspios_armhf/images/raspios_armhf-2024-03-15/2024-03-15-raspios-bookworm-armhf.img.xz"
+image_path: "./2024-03-15-raspios-bookworm-armhf.img.xz"
+ssid: "Your Wifi User Name"
+wifi_password: "Your Wifi Password"
+expected_checksum: "52a807d37a894dfcb09274382762f8274c7044ce3d98040aba474e0af93b85ab"
 ```
 
 Replace each placeholder with the actual data from your environment.
