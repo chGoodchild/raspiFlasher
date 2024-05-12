@@ -15,6 +15,13 @@ def verify_image_checksum(image_path, expected_checksum):
         raise ValueError("Checksum verification failed: the image file may be corrupted or altered.")
     print("Checksum verification passed.")
 
+def test_sd_card_with_badblocks(sd_card):
+    print("Testing SD card for bad blocks...")
+    try:
+        subprocess.run(['sudo', 'badblocks', '-wsv', sd_card], check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("Bad blocks were found on the SD card.")
+
 def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, country_code='US'):
     # Verify the image checksum
     verify_image_checksum(image_path, expected_checksum)
@@ -27,9 +34,12 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
         print("Flashing aborted.")
         return
 
+    # Test the SD card for bad blocks in destructive mode
+    test_sd_card_with_badblocks(sd_card)
+
     # Flash the SD card with the Raspberry Pi OS image using dd
     print("Flashing the SD card with the image...")
-    dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync"
+    dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync status=progress"
     subprocess.run(dd_command, shell=True, check=True)
     
     # Enable SSH access
