@@ -38,7 +38,10 @@ This command lists active network connections and extracts the SSID of the curre
 To retrieve the password for the Wi-Fi network you're currently connected to, you can use the following command:
 
 ```bash
-sudo grep psk= /etc/NetworkManager/system-connections/$(nmcli -t -f NAME connection show --active) | cut -d'=' -f2
+for file in /etc/NetworkManager/system-connections/*; do
+    echo "Checking $file for Wi-Fi password:"
+    sudo grep psk= "$file" | cut -d'=' -f2
+done
 ```
 
 This command accesses the network configuration files managed by NetworkManager and extracts the password. Note that you may need superuser privileges to view these files.
