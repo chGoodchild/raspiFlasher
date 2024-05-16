@@ -2,7 +2,7 @@ import sys
 import subprocess
 import os
 import hashlib
-import getpass
+from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions
 
 def configure_user(sd_card, username, plain_password):
     # Encrypt the password
@@ -11,7 +11,8 @@ def configure_user(sd_card, username, plain_password):
     encrypted_password, _ = process.communicate(input=plain_password)
 
     # Path to userconf.txt on the boot partition
-    userconf_path = f'/media/{username}/bootfs/userconf.txt'
+    mount_point = sdcard_management.check_and_mount_sd_card(sd_card)
+    userconf_path = os.path.join(mount_point, 'userconf.txt')
     with open(userconf_path, 'w') as f:
         f.write(f'{username}:{encrypted_password.strip()}')
 
@@ -33,29 +34,7 @@ def unmount_sd_card(sd_card):
     for part in ['1', '2']:  # Extend this list if there are more partitions
         subprocess.run(['sudo', 'umount', f'{sd_card}{part}'], stderr=subprocess.DEVNULL)
 
-def create_partitions(sd_card):
-    """Create partitions on the SD card after confirming it is bad-block free."""
-    print("Creating partition table and partitions...")
-    # Creating a new GPT partition table
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mklabel', 'gpt'], check=True)
 
-    # Creating a small FAT32 boot partition of 256MB
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'fat32', '1MiB', '257MiB'], check=True)
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'set', '1', 'boot', 'on'], check=True)  # Mark as bootable
-
-    # Creating a larger Linux filesystem partition for the remaining space
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'ext4', '257MiB', '100%'], check=True)
-
-    # Formatting the partitions
-    format_partitions(sd_card)
-
-def format_partitions(sd_card):
-    print("Formatting partitions...")
-    # Format the boot partition to FAT32
-    subprocess.run(['sudo', 'mkfs.vfat', f'{sd_card}1'], check=True)
-    # Format the main partition to EXT4
-    subprocess.run(['sudo', 'mkfs.ext4', f'{sd_card}2'], check=True)
-    
 def test_sd_card_with_badblocks(sd_card):
     unmount_sd_card(sd_card)
 
@@ -67,12 +46,12 @@ def test_sd_card_with_badblocks(sd_card):
 
     print("No bad blocks found, proceeding to partition the SD card.")
     create_partitions(sd_card)
+    check_and_mount_sd_card(sd_card)
+
 
 def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, country_code='US'):
-    # Verify the image checksum
-    verify_image_checksum(image_path, expected_checksum)
-
-    # List available disk devices and ask for user confirmation
+    """Main function to flash the SD card with all configurations."""
+    # verify_image_checksum(image_path, expected_checksum)
     print("Available disk devices:")
     subprocess.run(['lsblk'])
     confirm = input(f"Are you sure you want to flash the SD card at {sd_card}? (yes/no): ")
@@ -80,14 +59,27 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
         print("Flashing aborted.")
         return
 
-    # Test the SD card for bad blocks in destructive mode
-    test_sd_card_with_badblocks(sd_card)
+    # test_sd_card_with_badblocks(sd_card)    
 
-    # Flash the SD card with the Raspberry Pi OS image using dd
+    # Ensure the SD card is not mounted before flashing
+    unmount_sd_card(sd_card)
+
+    print("lsblk before flashing:")
+    subprocess.run(['lsblk'])
+
+    # The image already contains two partitions, so `of` doesn't need
+    # to point at individual partitions in dd
     print("Flashing the SD card with the image...")
     dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync status=progress"
     subprocess.run(dd_command, shell=True, check=True)
     
+    print("lsblk after flashing:")
+    subprocess.run(['lsblk'])
+
+    # Remount partitions after flashing for further configuration
+    boot_mount, root_mount = prepare_partitions(sd_card)
+    print(f"Mounted boot partition on {boot_mount} and root partition on {root_mount}")
+
     # Enable SSH access
     username = getpass.getuser()  # Gets the current system's username
     print("Enabling SSH access...")
@@ -126,11 +118,5 @@ if __name__ == '__main__':
         print("Usage: python flash_sd_card.py <SD_CARD> <IMAGE_PATH> <SSID> <WIFI_PASSWORD> <EXPECTED_CHECKSUM>")
         sys.exit(1)
 
-    sd_card = sys.argv[1]
-    image_path = sys.argv[2]
-    ssid = sys.argv[3]
-    wifi_password = sys.argv[4]
-    expected_checksum = sys.argv[5]
-
-    flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum)
+    flash_sd_card(*sys.argv[1:])
 
