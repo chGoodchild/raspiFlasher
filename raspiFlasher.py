@@ -2,6 +2,7 @@ import sys
 import subprocess
 import os
 import hashlib
+import getpass
 from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions
 
 def configure_user(sd_card, username, plain_password):
@@ -71,7 +72,7 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
     # to point at individual partitions in dd
     print("Flashing the SD card with the image...")
     dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync status=progress"
-    subprocess.run(dd_command, shell=True, check=True)
+    # subprocess.run(dd_command, shell=True, check=True)
     
     print("lsblk after flashing:")
     subprocess.run(['lsblk'])
@@ -83,13 +84,13 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
     # Enable SSH access
     username = getpass.getuser()  # Gets the current system's username
     print("Enabling SSH access...")
-    ssh_file_path = f'/media/{username}/bootfs/ssh'  # Use the dynamic path
+    ssh_file_path = f'/media/{username}/boot/ssh'  # Use the dynamic path
     with open(ssh_file_path, 'w') as ssh_file:
         pass  # Create an empty file named 'ssh'
 
     # Setup Wi-Fi
     print("Configuring Wi-Fi settings...")
-    wpa_file_path = f'/media/{username}/bootfs/wpa_supplicant.conf'
+    wpa_file_path = f'/media/{username}/boot/wpa_supplicant.conf'
     wpa_config = f"""
 country={country_code}
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -112,11 +113,19 @@ network={{
 
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
+def is_root():
+    return os.geteuid() == 0
+
+if not is_root():
+    print("Script not running as root. Trying to elevate privileges...")
+    os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
 
 if __name__ == '__main__':
     if len(sys.argv) != 6:
         print("Usage: python flash_sd_card.py <SD_CARD> <IMAGE_PATH> <SSID> <WIFI_PASSWORD> <EXPECTED_CHECKSUM>")
         sys.exit(1)
+
+    is_root()
 
     flash_sd_card(*sys.argv[1:])
 

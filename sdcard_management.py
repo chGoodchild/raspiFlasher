@@ -2,6 +2,15 @@ import subprocess
 import os
 import getpass
 
+def is_mounted(partition):
+    """Check if a partition is still mounted."""
+    try:
+        output = subprocess.check_output(['mount'])
+        return partition.encode() in output
+    except subprocess.CalledProcessError:
+        print("Failed to check mount status")
+        return False
+
 def mount_partition(partition, mount_point):
     """Mount a specific partition to a given mount point."""
     os.makedirs(mount_point, exist_ok=True)
@@ -10,6 +19,12 @@ def mount_partition(partition, mount_point):
 def unmount_partition(partition):
     """Unmount a specific partition."""
     subprocess.run(['sudo', 'umount', partition], stderr=subprocess.DEVNULL)
+
+    # Verify that the partitions are indeed unmounted
+    for part in partitions:
+        part_path = f'{sd_card}{part}'
+        if is_mounted(part_path):
+            raise Exception(f"Failed to unmount {part_path}, still mounted.")
 
 def prepare_partitions(sd_card):
     """Prepare and mount partitions for copying data."""
@@ -20,6 +35,7 @@ def prepare_partitions(sd_card):
     mount_partition(boot_partition, boot_mount)
     mount_partition(root_partition, root_mount)
     return boot_mount, root_mount
+
 
 def is_partitioned(sd_card):
     """Check if the SD card has necessary partitions."""
