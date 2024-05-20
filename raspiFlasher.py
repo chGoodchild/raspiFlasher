@@ -12,7 +12,7 @@ def configure_user(sd_card, username, plain_password):
     encrypted_password, _ = process.communicate(input=plain_password)
 
     # Path to userconf.txt on the boot partition
-    mount_point = sdcard_management.check_and_mount_sd_card(sd_card)
+    mount_point = check_and_mount_sd_card(sd_card)
     userconf_path = os.path.join(mount_point, 'userconf.txt')
     with open(userconf_path, 'w') as f:
         f.write(f'{username}:{encrypted_password.strip()}')
