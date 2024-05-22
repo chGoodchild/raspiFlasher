@@ -72,7 +72,7 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
     # to point at individual partitions in dd
     print("Flashing the SD card with the image...")
     dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync status=progress"
-    # subprocess.run(dd_command, shell=True, check=True)
+    subprocess.run(dd_command, shell=True, check=True)
     
     print("lsblk after flashing:")
     subprocess.run(['lsblk'])
