@@ -162,6 +162,17 @@ network={{
     # Ensure the script is executable
     subprocess.run(['sudo', 'chmod', '+x', os.path.join(boot_mount, 'first-boot-setup.sh')], check=True)
 
+    # Modify rc.local to run the first-boot-setup.sh on boot
+    rc_local_path = os.path.join(root_mount, 'etc', 'rc.local')
+    with open(rc_local_path, 'r+') as rc_local_file:
+        rc_local_content = rc_local_file.read()
+        # Ensure rc.local ends with 'exit 0' and call the setup script before it
+        if 'first-boot-setup.sh' not in rc_local_content:
+            rc_local_content = rc_local_content.replace('exit 0', 'bash /boot/first-boot-setup.sh\nexit 0')
+            rc_local_file.seek(0)
+            rc_local_file.write(rc_local_content)
+            rc_local_file.truncate()
+
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
 def is_root():
