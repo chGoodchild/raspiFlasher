@@ -41,6 +41,8 @@ psk={wifi_password}
 
 [ipv4]
 method=auto
+dhcp-client-id=mac
+dhcp-send-hostname=true
 
 [ipv6]
 method=auto
