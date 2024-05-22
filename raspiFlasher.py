@@ -4,6 +4,7 @@ import os
 import hashlib
 import getpass
 import uuid
+import shutil
 from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions
 
 def configure_user(sd_card, username, plain_password):
@@ -75,7 +76,6 @@ def unmount_sd_card(sd_card):
     print(f"Unmounting all partitions on {sd_card}")
     for part in ['1', '2']:  # Extend this list if there are more partitions
         subprocess.run(['sudo', 'umount', f'{sd_card}{part}'], stderr=subprocess.DEVNULL)
-
 
 def test_sd_card_with_badblocks(sd_card):
     unmount_sd_card(sd_card)
@@ -155,6 +155,13 @@ network={{
     # Configure Wi-Fi for NetworkManager
     configure_wifi(sd_card, ssid, wifi_password, boot_mount, root_mount)
 
+    # Copy the first-boot-setup.sh script to the boot partition
+    first_boot_script_path = os.path.join(os.path.dirname(__file__), 'first-boot-setup.sh')
+    shutil.copy(first_boot_script_path, os.path.join(boot_mount, 'first-boot-setup.sh'))
+
+    # Ensure the script is executable
+    subprocess.run(['sudo', 'chmod', '+x', os.path.join(boot_mount, 'first-boot-setup.sh')], check=True)
+
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
 def is_root():
@@ -172,4 +179,3 @@ if __name__ == '__main__':
     is_root()
 
     flash_sd_card(*sys.argv[1:])
-
