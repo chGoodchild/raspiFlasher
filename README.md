@@ -63,3 +63,35 @@ expected_checksum: "52a807d37a894dfcb09274382762f8274c7044ce3d98040aba474e0af93b
 
 Replace each placeholder with the actual data from your environment.
 
+
+------------
+
+Steps to Configure Wi-Fi Using NetworkManager on Raspberry Pi OS Bookworm:
+
+root/etc/NetworkManager/system-connections/my-wifi.nmconnection
+
+[connection]
+id=my-wifi
+uuid=YOUR-UUID-HERE  # Generate a UUID using uuidgen command
+type=wifi
+interface-name=wlan0
+autoconnect=true
+
+[wifi]
+mode=infrastructure
+ssid=your_SSID
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk=your_password
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+
+
+
+sudo chmod 600 /mnt/root/etc/NetworkManager/system-connections/my-wifi.nmconnection
+sudo chown root:root /mnt/root/etc/NetworkManager/system-connections/my-wifi.nmconnection

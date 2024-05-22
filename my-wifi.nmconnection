@@ -1,0 +1,21 @@
+sudo cat /etc/NetworkManager/system-connections/my-wifi.nmconnection
+[connection]
+id=AG
+uuid=[generate with uuidgen] # 295dae6d-ddf6-40b3-97f4-4185222d2fea
+type=wifi
+interface-name=wlan0
+autoconnect=true
+
+[wifi]
+mode=infrastructure
+ssid=[wifi name]
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk=[wifi password]
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
