@@ -3,6 +3,7 @@ import subprocess
 import os
 import hashlib
 import getpass
+import uuid
 from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions
 
 def configure_user(sd_card, username, plain_password):
@@ -13,10 +14,48 @@ def configure_user(sd_card, username, plain_password):
 
     # Path to userconf.txt on the boot partition
     mount_point = check_and_mount_sd_card(sd_card)
+    print("mount_point, ", mount_point)
     userconf_path = os.path.join(mount_point, 'userconf.txt')
     with open(userconf_path, 'w') as f:
         f.write(f'{username}:{encrypted_password.strip()}')
 
+def configure_wifi(sd_card, ssid, wifi_password, boot_mount, root_mount):
+    # Generate a UUID for the connection
+    connection_uuid = str(uuid.uuid4())
+    
+    wifi_config = f"""
+[connection]
+id=my-wifi
+uuid={connection_uuid}
+type=wifi
+interface-name=wlan0
+autoconnect=true
+
+[wifi]
+mode=infrastructure
+ssid={ssid}
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk={wifi_password}
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+    """
+    # Mount partitions to write the wifi config
+    # boot_mount, root_mount = prepare_partitions(sd_card)
+    wifi_config_path = os.path.join(root_mount, 'etc', 'NetworkManager', 'system-connections', 'my-wifi.nmconnection')
+    
+    os.makedirs(os.path.dirname(wifi_config_path), exist_ok=True)
+    with open(wifi_config_path, 'w') as f:
+        f.write(wifi_config)
+    
+    # Set permissions
+    subprocess.run(['sudo', 'chmod', '600', wifi_config_path], check=True)
+    subprocess.run(['sudo', 'chown', 'root:root', wifi_config_path], check=True)
 
 def verify_image_checksum(image_path, expected_checksum):
     print("Verifying image checksum...")
@@ -49,7 +88,6 @@ def test_sd_card_with_badblocks(sd_card):
     create_partitions(sd_card)
     check_and_mount_sd_card(sd_card)
 
-
 def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, country_code='US'):
     """Main function to flash the SD card with all configurations."""
     # verify_image_checksum(image_path, expected_checksum)
@@ -72,7 +110,7 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
     # to point at individual partitions in dd
     print("Flashing the SD card with the image...")
     dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync status=progress"
-    subprocess.run(dd_command, shell=True, check=True)
+    # subprocess.run(dd_command, shell=True, check=True)
     
     print("lsblk after flashing:")
     subprocess.run(['lsblk'])
@@ -111,6 +149,9 @@ network={{
     username = input("Enter the desired username for Raspberry Pi: ")
     password = getpass.getpass("Enter the desired password for Raspberry Pi: ")
     configure_user(sd_card, username, password)
+
+    # Configure Wi-Fi for NetworkManager
+    configure_wifi(sd_card, ssid, wifi_password, boot_mount, root_mount)
 
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
