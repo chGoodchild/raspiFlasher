@@ -5,7 +5,12 @@ import hashlib
 import getpass
 import uuid
 import shutil
+import yaml
 from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions
+
+def load_config(config_path='config.yaml'):
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
 
 def configure_user(sd_card, username, plain_password):
     # Encrypt the password
@@ -48,8 +53,6 @@ dhcp-send-hostname=true
 [ipv6]
 method=auto
     """
-    # Mount partitions to write the wifi config
-    # boot_mount, root_mount = prepare_partitions(sd_card)
     wifi_config_path = os.path.join(root_mount, 'etc', 'NetworkManager', 'system-connections', 'my-wifi.nmconnection')
     
     os.makedirs(os.path.dirname(wifi_config_path), exist_ok=True)
@@ -90,7 +93,7 @@ def test_sd_card_with_badblocks(sd_card):
     create_partitions(sd_card)
     check_and_mount_sd_card(sd_card)
 
-def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, country_code='US'):
+def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, pi_username, pi_password, country_code='US'):
     """Main function to flash the SD card with all configurations."""
     # verify_image_checksum(image_path, expected_checksum)
     print("Available disk devices:")
@@ -112,7 +115,7 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, c
     # to point at individual partitions in dd
     print("Flashing the SD card with the image...")
     dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync status=progress"
-    # subprocess.run(dd_command, shell=True, check=True)
+    subprocess.run(dd_command, shell=True, check=True)
     
     print("lsblk after flashing:")
     subprocess.run(['lsblk'])
@@ -147,12 +150,7 @@ network={{
     with open(wpa_file_path, 'a') as wpa_file:
         wpa_file.write(wpa_config)
 
-    # Example usage in your main script
-    username = input("Enter the desired username for Raspberry Pi: ")
-    password = getpass.getpass("Enter the desired password for Raspberry Pi: ")
-    configure_user(sd_card, username, password)
-
-    # Configure Wi-Fi for NetworkManager
+    configure_user(sd_card, pi_username, pi_password)
     configure_wifi(sd_card, ssid, wifi_password, boot_mount, root_mount)
 
     # Copy the first-boot-setup.sh script to the boot partition
@@ -183,10 +181,14 @@ if not is_root():
     os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
 
 if __name__ == '__main__':
-    if len(sys.argv) != 6:
-        print("Usage: python flash_sd_card.py <SD_CARD> <IMAGE_PATH> <SSID> <WIFI_PASSWORD> <EXPECTED_CHECKSUM>")
-        sys.exit(1)
-
-    is_root()
-
-    flash_sd_card(*sys.argv[1:])
+    config = load_config()
+    
+    flash_sd_card(
+        config['sd_card'], 
+        config['image_path'], 
+        config['ssid'], 
+        config['wifi_password'], 
+        config['expected_checksum'],
+        config['pi_username'], 
+        config['pi_password']
+    )
