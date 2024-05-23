@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Redirect all output to a log file for debugging
-# exec > /var/log/first-boot-setup.log 2>&1
-# set -x  # Enable script debugging
+exec > /var/log/first-boot-setup.log 2>&1
+set -x  # Enable script debugging
 
 echo "Starting first-boot-setup.sh script..."
 

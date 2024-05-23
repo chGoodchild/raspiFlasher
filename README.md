@@ -65,6 +65,7 @@ Replace each placeholder with the actual data from your environment.
 
 ## Workflow
 
+```bash
 $ python3 yaml_launcher.py 
 Launching the SD card flashing script...
 Script not running as root. Trying to elevate privileges...
@@ -122,8 +123,13 @@ Made first-boot-setup.sh executable
 Modified /media/root/root/etc/rc.local to include first-boot-setup.sh
 SD card is ready with the OS, SSH, and Wi-Fi configured.
 It took 92.92427706718445 seconds to flash the image and set up the pi
+```
 
 
 ## Manual dependency installation
 
-curl -fsSL https://raw.githubusercontent.com/chGoodchild/raspiFlasher/master/first-boot-setup.sh | sudo sh
+```bash
+wget https://raw.githubusercontent.com/chGoodchild/raspiFlasher/master/manual_setup.sh
+chmod +x manual_setup.sh
+./manual_setup.sh
+```
