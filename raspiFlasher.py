@@ -6,33 +6,20 @@ import hashlib
 import getpass
 import uuid
 import shutil
-import tqdm
 import yaml
 from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions
 
-def flash_sd_card(image_path, sd_card):
+def flash_action(image_path, sd_card):
     print("Flashing the SD card with the image...")
-
     dd_command = f"sudo dd if={image_path} of={sd_card} bs=4M conv=fsync status=progress"
 
     with subprocess.Popen(dd_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
-        total_size = None
-        progress = 0
-
-        # Initialize progress bar
-        with tqdm.tqdm(total=total_size, unit='B', unit_scale=True) as bar:
-            for line in process.stderr:
-                # Extract the progress information
-                if 'bytes' in line:
-                    progress = int(line.split()[0])
-                    bar.update(progress - bar.n)  # Update tqdm with the difference
-
-            process.wait()  # Wait for the dd command to finish
-            bar.close()
+        for line in process.stderr:
+            print(line, end='')  # Print the output from dd command to the console
+        process.wait()  # Wait for the dd command to finish
 
     if process.returncode != 0:
         raise subprocess.CalledProcessError(process.returncode, dd_command)
-
 
 def load_config(config_path='config.yaml'):
     with open(config_path, 'r') as file:
@@ -134,16 +121,10 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, p
     # Ensure the SD card is not mounted before flashing
     unmount_sd_card(sd_card)
 
-    print("lsblk before flashing:")
-    subprocess.run(['lsblk'])
-
     # The image already contains two partitions, so `of` doesn't need
     # to point at individual partitions in dd
-    flash_sd_card(image_path, sd_card)
+    flash_action(image_path, sd_card)
     
-    print("lsblk after flashing:")
-    subprocess.run(['lsblk'])
-
     # Remount partitions after flashing for further configuration
     boot_mount, root_mount = prepare_partitions(sd_card)
     print(f"Mounted boot partition on {boot_mount} and root partition on {root_mount}")
@@ -205,8 +186,11 @@ if not is_root():
     os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
 
 if __name__ == '__main__':
+
+    
     # Start timing
     start_time = time.time()
+
 
     config = load_config()
     
