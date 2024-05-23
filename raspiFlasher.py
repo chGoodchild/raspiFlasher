@@ -15,7 +15,7 @@ def flash_action(image_path, sd_card):
 
     with subprocess.Popen(dd_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
         for line in process.stderr:
-            print(line, end='')  # Print the output from dd command to the console
+            print(f"\r{line.strip()}", end='')  # Print and overwrite the same line
         process.wait()  # Wait for the dd command to finish
 
     if process.returncode != 0:
@@ -160,10 +160,13 @@ network={{
 
     # Copy the first-boot-setup.sh script to the boot partition
     first_boot_script_path = os.path.join(os.path.dirname(__file__), 'first-boot-setup.sh')
-    shutil.copy(first_boot_script_path, os.path.join(boot_mount, 'first-boot-setup.sh'))
+    dest_first_boot_script_path = os.path.join(boot_mount, 'first-boot-setup.sh')
+    shutil.copy(first_boot_script_path, dest_first_boot_script_path)
+    print(f"Copied first-boot-setup.sh to {dest_first_boot_script_path}")
 
     # Ensure the script is executable
-    subprocess.run(['sudo', 'chmod', '+x', os.path.join(boot_mount, 'first-boot-setup.sh')], check=True)
+    subprocess.run(['sudo', 'chmod', '+x', dest_first_boot_script_path], check=True)
+    print("Made first-boot-setup.sh executable")
 
     # Modify rc.local to run the first-boot-setup.sh on boot
     rc_local_path = os.path.join(root_mount, 'etc', 'rc.local')
@@ -175,6 +178,7 @@ network={{
             rc_local_file.seek(0)
             rc_local_file.write(rc_local_content)
             rc_local_file.truncate()
+            print(f"Modified {rc_local_path} to include first-boot-setup.sh")
 
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
