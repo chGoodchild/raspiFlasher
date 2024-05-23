@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+progressbar2 = "*"
+pyyaml = "==6.0.1"
+requests = "==2.32.2"
+tqdm = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
