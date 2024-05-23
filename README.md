@@ -110,7 +110,7 @@ sdb      8:16   1  29,7G  0 disk
 Are you sure you want to flash the SD card at /dev/sdb? (yes/no): yes
 Unmounting all partitions on /dev/sdb
 Flashing the SD card with the image...
-5427429376 bytes (5,4 GB, 5,1 GiB) copied, 84,0538 s, 64,6 MB/sMounted boot partition on /media/root/boot and root partition on /media/root/root
+5427429376 bytes (5,4 GB, 5,1 GiB) copied, 83,3035 s, 65,2 MB/sMounted boot partition on /media/root/boot and root partition on /media/root/root
 Enabling SSH access...
 Configuring Wi-Fi settings...
 Password: 
@@ -121,4 +121,5 @@ Copied first-boot-setup.sh to /media/root/boot/first-boot-setup.sh
 Made first-boot-setup.sh executable
 Modified /media/root/root/etc/rc.local to include first-boot-setup.sh
 SD card is ready with the OS, SSH, and Wi-Fi configured.
-It took 113.533132314682 seconds to flash the image and set up the pi
+It took 92.92427706718445 seconds to flash the image and set up the pi
+

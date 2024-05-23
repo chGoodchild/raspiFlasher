@@ -14,10 +14,13 @@ def is_mounted(partition):
 def mount_partition(partition, mount_point):
     """Mount a specific partition to a given mount point."""
     os.makedirs(mount_point, exist_ok=True)
-    subprocess.run(['sudo', 'mount', partition, mount_point], check=True)
+    print("mounting, ", str(mount_point))
+    if not is_mounted(partition):
+        subprocess.run(['sudo', 'mount', partition, mount_point], check=True)
 
 def unmount_partition(partition):
     """Unmount a specific partition."""
+    print("unmounting, ", str(partition))
     subprocess.run(['sudo', 'umount', partition], stderr=subprocess.DEVNULL)
 
     # Verify that the partitions are indeed unmounted
@@ -48,7 +51,7 @@ def is_partitioned(sd_card):
 def check_and_mount_sd_card(sd_card):
     """Check and mount the SD card boot partition."""
     boot_partition = f'{sd_card}1'
-    mount_point = f'/media/{getpass.getuser()}/bootfs'
+    mount_point = f'/media/{getpass.getuser()}/boot'
     if not os.path.ismount(mount_point):
         print(f"Mounting {boot_partition} to {mount_point}...")
         os.makedirs(mount_point, exist_ok=True)

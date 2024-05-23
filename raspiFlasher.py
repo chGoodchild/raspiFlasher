@@ -132,13 +132,13 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, p
     # Enable SSH access
     username = getpass.getuser()  # Gets the current system's username
     print("Enabling SSH access...")
-    ssh_file_path = f'/media/{username}/boot/ssh'  # Use the dynamic path
+    ssh_file_path = f'{boot_mount}/ssh'  # Use the dynamic path
     with open(ssh_file_path, 'w') as ssh_file:
         pass  # Create an empty file named 'ssh'
 
     # Setup Wi-Fi
     print("Configuring Wi-Fi settings...")
-    wpa_file_path = f'/media/{username}/boot/wpa_supplicant.conf'
+    wpa_file_path = f'{boot_mount}/wpa_supplicant.conf'
     wpa_config = f"""
 country={country_code}
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -190,11 +190,8 @@ if not is_root():
     os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
 
 if __name__ == '__main__':
-
-    
     # Start timing
     start_time = time.time()
-
 
     config = load_config()
     
@@ -214,4 +211,3 @@ if __name__ == '__main__':
     # Calculate the duration
     duration = end_time - start_time
     print(f"It took {duration} seconds to flash the image and set up the pi")
-
