@@ -168,17 +168,15 @@ network={{
     subprocess.run(['sudo', 'chmod', '+x', dest_first_boot_script_path], check=True)
     print("Made first-boot-setup.sh executable")
 
-    # Modify rc.local to run the first-boot-setup.sh on boot
-    rc_local_path = os.path.join(root_mount, 'etc', 'rc.local')
-    with open(rc_local_path, 'r+') as rc_local_file:
-        rc_local_content = rc_local_file.read()
-        # Ensure rc.local ends with 'exit 0' and call the setup script before it
-        if 'first-boot-setup.sh' not in rc_local_content:
-            rc_local_content = rc_local_content.replace('exit 0', 'bash /boot/first-boot-setup.sh\nexit 0')
-            rc_local_file.seek(0)
-            rc_local_file.write(rc_local_content)
-            rc_local_file.truncate()
-            print(f"Modified {rc_local_path} to include first-boot-setup.sh")
+    # Copy the systemd service file to the root partition
+    service_file_path = os.path.join(os.path.dirname(__file__), 'first-boot-setup.service')
+    dest_service_file_path = os.path.join(root_mount, 'etc/systemd/system/first-boot-setup.service')
+    shutil.copy(service_file_path, dest_service_file_path)
+    print(f"Copied first-boot-setup.service to {dest_service_file_path}")
+
+    # Enable the systemd service
+    subprocess.run(['sudo', 'chroot', root_mount, 'systemctl', 'enable', 'first-boot-setup.service'], check=True)
+    print("Enabled first-boot-setup.service")
 
     print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
 
