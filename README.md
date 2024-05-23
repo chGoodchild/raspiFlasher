@@ -123,3 +123,7 @@ Modified /media/root/root/etc/rc.local to include first-boot-setup.sh
 SD card is ready with the OS, SSH, and Wi-Fi configured.
 It took 92.92427706718445 seconds to flash the image and set up the pi
 
+
+## Manual dependency installation
+
+curl -fsSL https://raw.githubusercontent.com/chGoodchild/raspiFlasher/master/first-boot-setup.sh | sudo sh
