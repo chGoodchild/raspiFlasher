@@ -1,3 +1,4 @@
+import time
 import sys
 import subprocess
 import os
@@ -181,6 +182,12 @@ if not is_root():
     os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
 
 if __name__ == '__main__':
+
+    
+    # Start timing
+    start_time = time.time()
+
+
     config = load_config()
     
     flash_sd_card(
@@ -192,3 +199,11 @@ if __name__ == '__main__':
         config['pi_username'], 
         config['pi_password']
     )
+    
+    # End timing
+    end_time = time.time()
+
+    # Calculate the duration
+    duration = end_time - start_time
+    print(f"It took {duration} seconds to flash the image and set up the pi")
+
