@@ -174,11 +174,15 @@ network={{
     shutil.copy(service_file_path, dest_service_file_path)
     print(f"Copied first-boot-setup.service to {dest_service_file_path}")
 
-    # Enable the systemd service
-    subprocess.run(['sudo', 'chroot', root_mount, 'systemctl', 'enable', 'first-boot-setup.service'], check=True)
-    print("Enabled first-boot-setup.service")
+    # Copy the enable-first-boot-service.sh script to the boot partition
+    enable_service_script_path = os.path.join(os.path.dirname(__file__), 'enable-first-boot-service.sh')
+    dest_enable_service_script_path = os.path.join(boot_mount, 'enable-first-boot-service.sh')
+    shutil.copy(enable_service_script_path, dest_enable_service_script_path)
+    print(f"Copied enable-first-boot-service.sh to {dest_enable_service_script_path}")
 
-    print("SD card is ready with the OS, SSH, and Wi-Fi configured.")
+    # Ensure the script is executable
+    subprocess.run(['sudo', 'chmod', '+x', dest_enable_service_script_path], check=True)
+    print("Made enable-first-boot-service.sh executable")
 
 def is_root():
     return os.geteuid() == 0

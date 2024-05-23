@@ -2,6 +2,9 @@
 
 # Redirect all output to a log file for debugging
 exec > /var/log/first-boot-setup.log 2>&1
+set -x  # Enable script debugging
+
+echo "Starting first-boot-setup.sh script..."
 
 # Ensure dhcpcd5 is installed
 echo "Updating package list and installing dhcpcd5..."
@@ -27,6 +30,10 @@ sudo usermod -aG docker $(whoami)
 # Install Tailscale
 echo "Installing Tailscale..."
 curl -fsSL https://tailscale.com/install.sh | sudo sh
+
+# Enable the first-boot-setup systemd service to run at next boot
+echo "Enabling first-boot-setup service..."
+sudo systemctl enable first-boot-setup.service
 
 # Disable this script from running on next boot
 echo "Disabling first-boot-setup.sh from running on next boot..."
