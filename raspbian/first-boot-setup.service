@@ -1,0 +1,13 @@
+[Unit]
+Description=First Boot Setup Script
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /boot/first-boot-setup.sh
+StandardOutput=journal
+StandardError=journal
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
