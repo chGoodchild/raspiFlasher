@@ -6,20 +6,19 @@ def list_partitions(sd_card):
     """List all partitions for the given SD card."""
     try:
         result = subprocess.run(['lsblk', '-nlo', 'NAME', sd_card], capture_output=True, text=True, check=True)
-        print(result)
         partitions = result.stdout.strip().split()
-        print(partitions)
-        # partitions = [f'/dev/{p}' for p in partitions if p != sd_card.split('/')[-1]]
+        # Include the full path for partitions
+        partitions = [f'/dev/{p}' for p in partitions if p != sd_card.split('/')[-1]]
         return partitions
     except subprocess.CalledProcessError as e:
         print(f"Error listing partitions: {e}")
         return []
 
-def is_mounted(partition):
-    """Check if a partition is still mounted."""
+def is_mounted(mount_point):
+    """Check if a mount point is already mounted."""
     try:
         output = subprocess.check_output(['mount'])
-        return partition.encode() in output
+        return mount_point.encode() in output
     except subprocess.CalledProcessError:
         print("Failed to check mount status")
         return False
@@ -27,36 +26,34 @@ def is_mounted(partition):
 def mount_partition(partition, mount_point):
     """Mount a specific partition to a given mount point."""
     os.makedirs(mount_point, exist_ok=True)
-    print("mounting, ", str(mount_point))
-    if not is_mounted(partition):
-        subprocess.run(['sudo', 'mount', partition, mount_point], check=True)
-
-def unmount_partition(partition):
-    """Unmount a specific partition."""
-    print("unmounting, ", str(partition))
-    subprocess.run(['sudo', 'umount', partition], stderr=subprocess.DEVNULL)
-
-    # Verify that the partitions are indeed unmounted
-    for part in partitions:
-        part_path = f'{sd_card}{part}'
-        if is_mounted(part_path):
-            raise Exception(f"Failed to unmount {part_path}, still mounted.")
+    print(f"Mounting {partition} to {mount_point}...")
+    if not is_mounted(mount_point):
+        try:
+            subprocess.run(['sudo', 'mount', partition, mount_point], check=True)
+            print(f"Mounted {partition} to {mount_point}")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to mount {partition}: {e}")
+    else:
+        print(f"{mount_point} is already mounted.")
 
 def prepare_partitions(sd_card):
     """Prepare and mount partitions for copying data."""
     partitions = list_partitions(sd_card)
-
-    boot_partition = partitions[0]
-    boot_mount = f'/media/{getpass.getuser()}/boot'
-    mount_partition(boot_partition, boot_mount)
-
+    
     if len(partitions) < 2:
-        # raise ValueError("Not enough partitions found on the SD card.")
-        root_partition = partitions[1]
-        root_mount = f'/media/{getpass.getuser()}/root'
-        mount_partition(root_partition, root_mount)
-        return boot_mount, root_mount
-    return boot_mount
+        raise ValueError("Not enough partitions found on the SD card.")
+
+    # Assuming the first partition is the boot partition and the second is the root partition
+    boot_partition = partitions[0]
+    root_partition = partitions[1]
+    
+    boot_mount = f'/media/{getpass.getuser()}/boot'
+    root_mount = f'/media/{getpass.getuser()}/root'
+    
+    mount_partition(boot_partition, boot_mount)
+    mount_partition(root_partition, root_mount)
+    
+    return boot_mount, root_mount
 
 def is_partitioned(sd_card):
     """Check if the SD card has necessary partitions."""
