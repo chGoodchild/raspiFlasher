@@ -7,8 +7,8 @@ def list_partitions(sd_card):
     try:
         result = subprocess.run(['lsblk', '-nlo', 'NAME', sd_card], capture_output=True, text=True, check=True)
         partitions = result.stdout.strip().split()
-        # Include the full path for partitions
-        partitions = [f'/dev/{p}' for p in partitions if p.startswith(sd_card.split('/')[-1])]
+        # Include the full path for partitions and exclude the entire device
+        partitions = [f'/dev/{p}' for p in partitions if p.startswith(sd_card.split('/')[-1]) and p != sd_card.split('/')[-1]]
         return partitions
     except subprocess.CalledProcessError as e:
         print(f"Error listing partitions: {e}")
@@ -114,3 +114,4 @@ def unmount_sd_card(sd_card):
     for partition in partitions:
         if os.path.exists(partition):  # Check if the partition exists
             subprocess.run(['sudo', 'umount', partition], stderr=subprocess.DEVNULL)
+
