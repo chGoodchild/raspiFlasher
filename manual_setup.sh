@@ -19,7 +19,7 @@ echo "Installing Tailscale..."
 curl -fsSL https://tailscale.com/install.sh | sudo sh
 
 # Download and run the manual setup script
-wget https://raw.githubusercontent.com/chGoodchild/raspiFlasher/master/manual_setup.sh
-chmod +x manual_setup.sh
-./manual_setup.sh
+# wget https://raw.githubusercontent.com/chGoodchild/raspiFlasher/master/manual_setup.sh
+# chmod +x manual_setup.sh
+# ./manual_setup.sh
 
