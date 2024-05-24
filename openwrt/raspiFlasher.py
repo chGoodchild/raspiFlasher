@@ -1,14 +1,11 @@
 import time
 import sys
-import re
 import subprocess
 import os
 import hashlib
 import getpass
-import uuid
-import shutil
 import yaml
-from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions, list_partitions
+from sdcard_management import setup_sd_card, unmount_sd_card, flash_action, list_partitions
 
 def flash_action(image_path, sd_card):
     print("Flashing the SD card with the image...")
@@ -26,57 +23,6 @@ def load_config(config_path='config.yaml'):
     with open(config_path, 'r') as file:
         return yaml.safe_load(file)
 
-def configure_user(sd_card, username, plain_password):
-    # Encrypt the password
-    from subprocess import Popen, PIPE
-    process = Popen(['openssl', 'passwd', '-6'], stdin=PIPE, stdout=PIPE, stderr=PIPE, text=True)
-    encrypted_password, _ = process.communicate(input=plain_password)
-
-    # Path to userconf.txt on the boot partition
-    mount_point = check_and_mount_sd_card(sd_card)
-    print("mount_point, ", mount_point)
-    userconf_path = os.path.join(mount_point, 'userconf.txt')
-    with open(userconf_path, 'w') as f:
-        f.write(f'{username}:{encrypted_password.strip()}')
-
-def configure_wifi(sd_card, ssid, wifi_password, boot_mount, root_mount):
-    # Generate a UUID for the connection
-    connection_uuid = str(uuid.uuid4())
-    
-    wifi_config = f"""
-[connection]
-id=my-wifi
-uuid={connection_uuid}
-type=wifi
-interface-name=wlan0
-autoconnect=true
-
-[wifi]
-mode=infrastructure
-ssid={ssid}
-
-[wifi-security]
-key-mgmt=wpa-psk
-psk={wifi_password}
-
-[ipv4]
-method=auto
-dhcp-client-id=mac
-dhcp-send-hostname=true
-
-[ipv6]
-method=auto
-    """
-    wifi_config_path = os.path.join(root_mount, 'etc', 'NetworkManager', 'system-connections', 'my-wifi.nmconnection')
-    
-    os.makedirs(os.path.dirname(wifi_config_path), exist_ok=True)
-    with open(wifi_config_path, 'w') as f:
-        f.write(wifi_config)
-    
-    # Set permissions
-    subprocess.run(['sudo', 'chmod', '600', wifi_config_path], check=True)
-    subprocess.run(['sudo', 'chown', 'root:root', wifi_config_path], check=True)
-
 def verify_image_checksum(image_path, expected_checksum):
     print("Verifying image checksum...")
     sha256 = hashlib.sha256()
@@ -88,33 +34,9 @@ def verify_image_checksum(image_path, expected_checksum):
         raise ValueError("Checksum verification failed: the image file may be corrupted or altered.")
     print("Checksum verification passed.")
 
-
-def unmount_sd_card(sd_card):
-    """Attempt to unmount all partitions of the SD card."""
-    print(f"Unmounting all partitions on {sd_card}")
-
-    partitions = list_partitions(sd_card)
-
-    for partition in partitions:
-        if os.path.exists(partition):  # Check if the partition exists
-            subprocess.run(['sudo', 'umount', partition], stderr=subprocess.DEVNULL)
-        
-def test_sd_card_with_badblocks(sd_card):
-    unmount_sd_card(sd_card)
-
-    print("Testing SD card for bad blocks...")
-    try:
-        subprocess.run(['sudo', 'badblocks', '-wsv', sd_card], check=True)
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError("Bad blocks were found on the SD card.")
-
-    print("No bad blocks found, proceeding to partition the SD card.")
-    create_partitions(sd_card)
-    check_and_mount_sd_card(sd_card)
-
-def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, pi_username, pi_password, country_code='US'):
+def flash_sd_card(sd_card, image_path, expected_checksum):
     """Main function to flash the SD card with all configurations."""
-    # verify_image_checksum(image_path, expected_checksum)
+    verify_image_checksum(image_path, expected_checksum)
     print("Available disk devices:")
     subprocess.run(['lsblk'])
     confirm = input(f"Are you sure you want to flash the SD card at {sd_card}? (yes/no): ")
@@ -127,68 +49,12 @@ def flash_sd_card(sd_card, image_path, ssid, wifi_password, expected_checksum, p
     # Ensure the SD card is not mounted before flashing
     unmount_sd_card(sd_card)
 
-    # The image already contains two partitions, so `of` doesn't need
-    # to point at individual partitions in dd
+    # Flash the image to the SD card
     flash_action(image_path, sd_card)
     
     # Remount partitions after flashing for further configuration
     boot_mount, root_mount = prepare_partitions(sd_card)
     print(f"Mounted boot partition on {boot_mount} and root partition on {root_mount}")
-
-    # Enable SSH access
-    username = getpass.getuser()  # Gets the current system's username
-    print("Enabling SSH access...")
-    ssh_file_path = f'{boot_mount}/ssh'  # Use the dynamic path
-    with open(ssh_file_path, 'w') as ssh_file:
-        pass  # Create an empty file named 'ssh'
-
-    # Setup Wi-Fi
-    print("Configuring Wi-Fi settings...")
-    wpa_file_path = f'{boot_mount}/wpa_supplicant.conf'
-    wpa_config = f"""
-country={country_code}
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-network={{
-    ssid="{ssid}"
-    psk="{wifi_password}"
-    key_mgmt=WPA-PSK
-    disabled=0
-    priority=1
-}}
-    """
-    
-    with open(wpa_file_path, 'a') as wpa_file:
-        wpa_file.write(wpa_config)
-
-    configure_user(sd_card, pi_username, pi_password)
-    configure_wifi(sd_card, ssid, wifi_password, boot_mount, root_mount)
-
-    # Copy the first-boot-setup.sh script to the boot partition
-    first_boot_script_path = os.path.join(os.path.dirname(__file__), 'first-boot-setup.sh')
-    dest_first_boot_script_path = os.path.join(boot_mount, 'first-boot-setup.sh')
-    shutil.copy(first_boot_script_path, dest_first_boot_script_path)
-    print(f"Copied first-boot-setup.sh to {dest_first_boot_script_path}")
-
-    # Ensure the script is executable
-    subprocess.run(['sudo', 'chmod', '+x', dest_first_boot_script_path], check=True)
-    print("Made first-boot-setup.sh executable")
-
-    # Copy the systemd service file to the root partition
-    service_file_path = os.path.join(os.path.dirname(__file__), 'first-boot-setup.service')
-    dest_service_file_path = os.path.join(root_mount, 'etc/systemd/system/first-boot-setup.service')
-    shutil.copy(service_file_path, dest_service_file_path)
-    print(f"Copied first-boot-setup.service to {dest_service_file_path}")
-
-    # Copy the enable-first-boot-service.sh script to the boot partition
-    enable_service_script_path = os.path.join(os.path.dirname(__file__), 'enable-first-boot-service.sh')
-    dest_enable_service_script_path = os.path.join(boot_mount, 'enable-first-boot-service.sh')
-    shutil.copy(enable_service_script_path, dest_enable_service_script_path)
-    print(f"Copied enable-first-boot-service.sh to {dest_enable_service_script_path}")
-
-    # Ensure the script is executable
-    subprocess.run(['sudo', 'chmod', '+x', dest_enable_service_script_path], check=True)
-    print("Made enable-first-boot-service.sh executable")
 
 def is_root():
     return os.geteuid() == 0
@@ -206,11 +72,7 @@ if __name__ == '__main__':
     flash_sd_card(
         config['sd_card'], 
         config['image_path'], 
-        config['ssid'], 
-        config['wifi_password'], 
-        config['expected_checksum'],
-        config['pi_username'], 
-        config['pi_password']
+        config['expected_checksum']
     )
     
     # End timing
@@ -219,3 +81,4 @@ if __name__ == '__main__':
     # Calculate the duration
     duration = end_time - start_time
     print(f"It took {duration} seconds to flash the image and set up the pi")
+
