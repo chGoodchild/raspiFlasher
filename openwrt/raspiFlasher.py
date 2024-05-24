@@ -8,7 +8,7 @@ import getpass
 import uuid
 import shutil
 import yaml
-from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions
+from sdcard_management import setup_sd_card, check_and_mount_sd_card, create_partitions, prepare_partitions, list_partitions
 
 def flash_action(image_path, sd_card):
     print("Flashing the SD card with the image...")
@@ -89,34 +89,11 @@ def verify_image_checksum(image_path, expected_checksum):
     print("Checksum verification passed.")
 
 
-def list_partitions(sd_card):
-    """List all partitions for the given SD card."""
-    try:
-        result = subprocess.run(['lsblk', '-nlo', 'NAME', sd_card], capture_output=True, text=True, check=True)
-        partitions = result.stdout.strip().split()
-        partitions = [f'/dev/{p}' for p in partitions if p != sd_card.split('/')[-1]]
-        return partitions
-    except subprocess.CalledProcessError as e:
-        print(f"Error listing partitions: {e}")
-        return []
-
-def filter_partitions(partitions):
-    """Filter partitions to include only mmcblk* and sdb* patterns."""
-    filtered = []
-    for partition in partitions:
-        if re.match(r'/dev/mmcblk[0-9]+p[0-9]+$', partition) or re.match(r'/dev/sdb[0-9]+$', partition):
-            filtered.append(partition)
-    return filtered   
-
 def unmount_sd_card(sd_card):
     """Attempt to unmount all partitions of the SD card."""
     print(f"Unmounting all partitions on {sd_card}")
 
-    # Detect if the SD card uses the mmcblk naming convention
-    if re.match(r'/dev/mmcblk[0-9]+$', sd_card):
-        partitions = [f'{sd_card}p{part}' for part in range(1, 10)]  # Extend range if there are more partitions
-    else:
-        partitions = [f'{sd_card}{part}' for part in range(1, 10)]  # Extend range if there are more partitions
+    partitions = list_partitions(sd_card)
 
     for partition in partitions:
         if os.path.exists(partition):  # Check if the partition exists

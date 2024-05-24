@@ -2,6 +2,19 @@ import subprocess
 import os
 import getpass
 
+def list_partitions(sd_card):
+    """List all partitions for the given SD card."""
+    try:
+        result = subprocess.run(['lsblk', '-nlo', 'NAME', sd_card], capture_output=True, text=True, check=True)
+        print(result)
+        partitions = result.stdout.strip().split()
+        print(partitions)
+        # partitions = [f'/dev/{p}' for p in partitions if p != sd_card.split('/')[-1]]
+        return partitions
+    except subprocess.CalledProcessError as e:
+        print(f"Error listing partitions: {e}")
+        return []
+
 def is_mounted(partition):
     """Check if a partition is still mounted."""
     try:
@@ -31,14 +44,19 @@ def unmount_partition(partition):
 
 def prepare_partitions(sd_card):
     """Prepare and mount partitions for copying data."""
-    boot_partition = f'{sd_card}1'
-    root_partition = f'{sd_card}2'
-    boot_mount = f'/media/{getpass.getuser()}/boot'
-    root_mount = f'/media/{getpass.getuser()}/root'
-    mount_partition(boot_partition, boot_mount)
-    mount_partition(root_partition, root_mount)
-    return boot_mount, root_mount
+    partitions = list_partitions(sd_card)
 
+    boot_partition = partitions[0]
+    boot_mount = f'/media/{getpass.getuser()}/boot'
+    mount_partition(boot_partition, boot_mount)
+
+    if len(partitions) < 2:
+        # raise ValueError("Not enough partitions found on the SD card.")
+        root_partition = partitions[1]
+        root_mount = f'/media/{getpass.getuser()}/root'
+        mount_partition(root_partition, root_mount)
+        return boot_mount, root_mount
+    return boot_mount
 
 def is_partitioned(sd_card):
     """Check if the SD card has necessary partitions."""
@@ -50,12 +68,22 @@ def is_partitioned(sd_card):
 
 def check_and_mount_sd_card(sd_card):
     """Check and mount the SD card boot partition."""
-    boot_partition = f'{sd_card}1'
+    partitions = list_partitions(sd_card)
+    if not partitions:
+        print("No partitions found on the SD card.")
+        return None
+    
+    # Assuming the boot partition is the first one in the list
+    boot_partition = partitions[0]
     mount_point = f'/media/{getpass.getuser()}/boot'
+    
     if not os.path.ismount(mount_point):
         print(f"Mounting {boot_partition} to {mount_point}...")
         os.makedirs(mount_point, exist_ok=True)
         subprocess.run(['sudo', 'mount', boot_partition, mount_point], check=True)
+    else:
+        print(f"{mount_point} is already mounted.")
+    
     return mount_point
 
 def create_partitions(sd_card):
@@ -77,31 +105,3 @@ def setup_sd_card(sd_card):
     mount_point = check_and_mount_sd_card(sd_card)
     return mount_point
 
-
-"""
-def format_partitions(sd_card):
-    print("Formatting partitions...")
-    # Format the boot partition to FAT32
-    subprocess.run(['sudo', 'mkfs.vfat', f'{sd_card}1'], check=True)
-    # Format the main partition to EXT4
-    subprocess.run(['sudo', 'mkfs.ext4', f'{sd_card}2'], check=True)
-
-def create_partitions(sd_card):
-    # Create partitions on the SD card after confirming it is bad-block free.
-    print("Creating partition table and partitions...")
-    # Creating a new GPT partition table
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mklabel', 'gpt'], check=True)
-
-    # Creating a small FAT32 boot partition of 256MB
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'fat32', '1MiB', '257MiB'], check=True)
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'set', '1', 'boot', 'on'], check=True)  # Mark as bootable
-
-    # Creating a larger Linux filesystem partition for the remaining space
-    subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'ext4', '257MiB', '100%'], check=True)
-
-    # Formatting the partitions
-    format_partitions(sd_card)
-
-
-    
-"""
