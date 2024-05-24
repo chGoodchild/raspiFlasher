@@ -90,12 +90,21 @@ def check_and_mount_sd_card(sd_card):
 def create_partitions(sd_card):
     """Create and format partitions on the SD card."""
     print("Creating and formatting partitions...")
+
+    # Determine the partition naming scheme
+    if 'mmcblk' in sd_card:
+        boot_partition = f'{sd_card}p1'
+        root_partition = f'{sd_card}p2'
+    else:
+        boot_partition = f'{sd_card}1'
+        root_partition = f'{sd_card}2'
+
     subprocess.run(['sudo', 'parted', '-s', sd_card, 'mklabel', 'gpt'], check=True)
     subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'fat32', '1MiB', '257MiB'], check=True)
     subprocess.run(['sudo', 'parted', '-s', sd_card, 'set', '1', 'boot', 'on'], check=True)
     subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'ext4', '257MiB', '100%'], check=True)
-    subprocess.run(['sudo', 'mkfs.vfat', f'{sd_card}p1'], check=True)
-    subprocess.run(['sudo', 'mkfs.ext4', f'{sd_card}p2'], check=True)
+    subprocess.run(['sudo', 'mkfs.vfat', boot_partition], check=True)
+    subprocess.run(['sudo', 'mkfs.ext4', root_partition], check=True)
 
 def setup_sd_card(sd_card):
     """Setup the SD card with partitions, formatting, and mounting."""
