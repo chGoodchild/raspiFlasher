@@ -5,7 +5,7 @@ import os
 import hashlib
 import getpass
 import yaml
-from sdcard_management import setup_sd_card, unmount_sd_card, flash_action, list_partitions
+from sdcard_management import setup_sd_card, unmount_sd_card, list_partitions, prepare_partitions
 
 def flash_action(image_path, sd_card):
     print("Flashing the SD card with the image...")
@@ -81,4 +81,3 @@ if __name__ == '__main__':
     # Calculate the duration
     duration = end_time - start_time
     print(f"It took {duration} seconds to flash the image and set up the pi")
-
