@@ -8,7 +8,7 @@ def list_partitions(sd_card):
         result = subprocess.run(['lsblk', '-nlo', 'NAME', sd_card], capture_output=True, text=True, check=True)
         partitions = result.stdout.strip().split()
         # Include the full path for partitions
-        partitions = [f'/dev/{p}' for p in partitions if p != sd_card.split('/')[-1]]
+        partitions = [f'/dev/{p}' for p in partitions if p.startswith(sd_card.split('/')[-1])]
         return partitions
     except subprocess.CalledProcessError as e:
         print(f"Error listing partitions: {e}")
@@ -41,7 +41,11 @@ def prepare_partitions(sd_card):
     partitions = list_partitions(sd_card)
     
     if len(partitions) < 2:
-        raise ValueError("Not enough partitions found on the SD card.")
+        print("Not enough partitions found on the SD card. Creating partitions...")
+        create_partitions(sd_card)
+        partitions = list_partitions(sd_card)
+        if len(partitions) < 2:
+            raise ValueError("Failed to create the necessary partitions on the SD card.")
 
     # Assuming the first partition is the boot partition and the second is the root partition
     boot_partition = partitions[0]
@@ -74,7 +78,7 @@ def check_and_mount_sd_card(sd_card):
     boot_partition = partitions[0]
     mount_point = f'/media/{getpass.getuser()}/boot'
     
-    if not os.path.ismount(mount_point):
+    if not is_mounted(mount_point):
         print(f"Mounting {boot_partition} to {mount_point}...")
         os.makedirs(mount_point, exist_ok=True)
         subprocess.run(['sudo', 'mount', boot_partition, mount_point], check=True)
@@ -90,9 +94,8 @@ def create_partitions(sd_card):
     subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'fat32', '1MiB', '257MiB'], check=True)
     subprocess.run(['sudo', 'parted', '-s', sd_card, 'set', '1', 'boot', 'on'], check=True)
     subprocess.run(['sudo', 'parted', '-s', sd_card, 'mkpart', 'primary', 'ext4', '257MiB', '100%'], check=True)
-    subprocess.run(['sudo', 'mkfs.vfat', f'{sd_card}1'], check=True)
-    subprocess.run(['sudo', 'mkfs.ext4', f'{sd_card}2'], check=True)
-
+    subprocess.run(['sudo', 'mkfs.vfat', f'{sd_card}p1'], check=True)
+    subprocess.run(['sudo', 'mkfs.ext4', f'{sd_card}p2'], check=True)
 
 def setup_sd_card(sd_card):
     """Setup the SD card with partitions, formatting, and mounting."""
@@ -102,3 +105,12 @@ def setup_sd_card(sd_card):
     mount_point = check_and_mount_sd_card(sd_card)
     return mount_point
 
+def unmount_sd_card(sd_card):
+    """Attempt to unmount all partitions of the SD card."""
+    print(f"Unmounting all partitions on {sd_card}")
+
+    partitions = list_partitions(sd_card)
+
+    for partition in partitions:
+        if os.path.exists(partition):  # Check if the partition exists
+            subprocess.run(['sudo', 'umount', partition], stderr=subprocess.DEVNULL)
