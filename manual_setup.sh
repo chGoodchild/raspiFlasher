@@ -4,9 +4,11 @@
 sudo apt update -y
 sudo apt upgrade -y
 
-# Install necessary packages
+# Install docker packages
 sudo apt-get install -y qemu-user-static binfmt-support meld
 
+# Install user packages
+sudo apt install -y screen emacs git meld 
 
 # Install Docker
 echo "Installing Docker..."
