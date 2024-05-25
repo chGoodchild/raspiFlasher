@@ -1,5 +1,6 @@
 import subprocess
 import os
+import time
 import getpass
 
 def list_partitions(sd_card):
@@ -9,6 +10,7 @@ def list_partitions(sd_card):
         partitions = result.stdout.strip().split()
         # Include the full path for partitions and exclude the entire device
         partitions = [f'/dev/{p}' for p in partitions if p.startswith(sd_card.split('/')[-1]) and p != sd_card.split('/')[-1]]
+        print(f"Detected partitions: {partitions}")  # Debug information
         return partitions
     except subprocess.CalledProcessError as e:
         print(f"Error listing partitions: {e}")
@@ -38,11 +40,15 @@ def mount_partition(partition, mount_point):
 
 def prepare_partitions(sd_card):
     """Prepare and mount partitions for copying data."""
+    # Wait a moment to allow the kernel to recognize the new partitions
+    time.sleep(2)
+    
     partitions = list_partitions(sd_card)
     
     if len(partitions) < 2:
         print("Not enough partitions found on the SD card. Creating partitions...")
         create_partitions(sd_card)
+        time.sleep(2)  # Allow some time for the partitions to be created
         partitions = list_partitions(sd_card)
         if len(partitions) < 2:
             raise ValueError("Failed to create the necessary partitions on the SD card.")
@@ -92,7 +98,7 @@ def create_partitions(sd_card):
     print("Creating and formatting partitions...")
 
     # Determine the partition naming scheme
-    if 'mmcblk' in sd_card:
+    if 'mmcblk' in sd_card or 'nvme' in sd_card:
         boot_partition = f'{sd_card}p1'
         root_partition = f'{sd_card}p2'
     else:
