@@ -133,3 +133,9 @@ wget https://raw.githubusercontent.com/chGoodchild/raspiFlasher/master/manual_se
 chmod +x manual_setup.sh
 ./manual_setup.sh
 ```
+
+## OpenWRT
+
+Only works if raspbian is flashed just before flashing OpenWRT.
+
+Have to figure out why this is the case...
