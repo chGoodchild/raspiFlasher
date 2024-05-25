@@ -1,0 +1,39 @@
+config interface 'loopback'
+    option device 'lo'
+    option proto 'static'
+    option ipaddr '127.0.0.1'
+    option netmask '255.0.0.0'
+
+config globals 'globals'
+    option ula_prefix 'fdfa:4e1d:e01d::/48'
+
+config device
+    option name 'br-lan'
+    option type 'bridge'
+    list ports 'eth0'
+
+config device
+    option name 'eth0.1'
+    option type '8021q'
+    option ifname 'eth0'
+    option vid '1'
+
+config device
+    option name 'eth0.2'
+    option type '8021q'
+    option ifname 'eth0'
+    option vid '2'
+
+config interface 'lan'
+    option device 'eth0.1'
+    option proto 'static'
+    option ipaddr '192.168.1.1'
+    option netmask '255.255.255.0'
+    option ip6assign '60'
+
+config interface 'wan'
+    option device 'eth0.2'
+    option proto 'dhcp'
+
+config interface 'wwan'
+    option proto 'dhcp'
