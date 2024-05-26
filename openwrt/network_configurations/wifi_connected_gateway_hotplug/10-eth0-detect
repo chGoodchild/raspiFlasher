@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# This script handles the dynamic switching of eth0 between WAN and LAN roles.
+# Paste in: /etc/hotplug.d/iface/10-eth0-detect
+
+if [ "$ACTION" = "ifup" ] && [ "$INTERFACE" = "eth0" ]; then
+    # Check if eth0 has received a DHCP lease
+    if ip addr show eth0 | grep -q "inet "; then
+        # eth0 has an IP address, assume it's WAN
+        uci set network.wan.ifname='eth0'
+        uci set network.lan.ifname='dummy0' # Use a dummy interface to disable LAN on eth0
+        uci set dhcp.lan.ignore='1'
+        uci set dhcp.wan.ignore='1'
+    else
+        # eth0 does not have an IP address, assume it's LAN
+        uci set network.lan.ifname='eth0'
+        uci set network.wan.ifname='dummy0' # Use a dummy interface to disable WAN on eth0
+        uci set dhcp.lan.ignore='0'
+        uci set dhcp.wan.ignore='1'
+    fi
+    uci commit network
+    uci commit dhcp
+    /etc/init.d/network restart
+    /etc/init.d/dnsmasq restart
+fi
+

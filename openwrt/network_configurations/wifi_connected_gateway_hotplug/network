@@ -23,3 +23,6 @@ config interface 'lan'
 config interface 'wwan'
 	option proto 'dhcp'
 
+config interface 'wan'
+    option ifname 'eth0'
+    option proto 'dhcp'

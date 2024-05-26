@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# This script ensures the WiFi interface continues to provide DHCP services.
+
+if [ "$ACTION" = "ifup" ] && [ "$INTERFACE" = "wlan0" ]; then
+    # Enable DHCP on the WiFi interface
+    uci set dhcp.wifi.ignore='0'
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart
+fi
+
+if [ "$ACTION" = "ifdown" ] && [ "$INTERFACE" = "wlan0" ]; then
+    # Optionally, disable DHCP on the WiFi interface when it's down
+    uci set dhcp.wifi.ignore='1'
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart
+fi
