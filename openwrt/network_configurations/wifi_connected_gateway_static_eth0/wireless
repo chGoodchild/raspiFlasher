@@ -1,10 +1,10 @@
+
 config wifi-device 'radio0'
 	option type 'mac80211'
 	option path 'platform/soc/fe300000.mmcnr/mmc_host/mmc1/mmc1:0001/mmc1:0001:1'
 	option channel '36'
 	option band '5g'
 	option htmode 'VHT20'
-	option disabled '0'
 	option country 'US'
 	option cell_density '0'
 
@@ -14,8 +14,9 @@ config wifi-iface 'default_radio0'
 	option mode 'ap'
 	option ssid 'OpenWrt'
 	option encryption 'none'
+	option disabled '1'
 
-config wifi-iface 'wwan'
+config wifi-iface 'wifinet1'
 	option device 'radio0'
 	option mode 'sta'
 	option network 'wwan'
