@@ -23,6 +23,13 @@ config zone
 	list network 'wan6'
 	list network 'wwan'
 
+config rule
+    option name 'Allow-SSH'
+    option src 'wan'
+    option proto 'tcp'
+    option dest_port '22'
+    option target 'ACCEPT'
+
 config forwarding
 	option src 'lan'
 	option dest 'wan'
