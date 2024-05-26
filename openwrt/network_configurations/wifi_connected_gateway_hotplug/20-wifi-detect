@@ -1,17 +1,19 @@
 #!/bin/sh
 
-# This script ensures the WiFi interface continues to provide DHCP services.
+# This script ensures the WiFi interface continues to provide DHCP services when necessary.
 
 if [ "$ACTION" = "ifup" ] && [ "$INTERFACE" = "wlan0" ]; then
-    # Enable DHCP on the WiFi interface
-    uci set dhcp.wifi.ignore='0'
+    if ! ip route | grep -q default; then
+        # No default route, assume WiFi should act as LAN
+        uci set network.wifi.ifname='wlan0'
+        uci set dhcp.wifi.ignore='0'
+    else
+        # Default route exists, assume WiFi should not provide DHCP
+        uci set dhcp.wifi.ignore='1'
+    fi
+    uci commit network
     uci commit dhcp
+    /etc/init.d/network restart
     /etc/init.d/dnsmasq restart
 fi
 
-if [ "$ACTION" = "ifdown" ] && [ "$INTERFACE" = "wlan0" ]; then
-    # Optionally, disable DHCP on the WiFi interface when it's down
-    uci set dhcp.wifi.ignore='1'
-    uci commit dhcp
-    /etc/init.d/dnsmasq restart
-fi
