@@ -19,6 +19,8 @@ config interface 'lan'
 	option ipaddr '192.168.2.1'
 	option netmask '255.255.255.0'
 	option ip6assign '60'
+        list ports 'eth0'
+        list ports 'wlan0'  # Make sure your wireless interface is included
 
 config interface 'wwan'
 	option proto 'dhcp'

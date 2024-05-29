@@ -14,7 +14,6 @@ config wifi-iface 'default_radio0'
 	option mode 'ap'
 	option ssid 'OpenWrt'
 	option encryption 'none'
-	option disabled '1'
 
 config wifi-iface 'wifinet1'
 	option device 'radio0'
@@ -23,4 +22,5 @@ config wifi-iface 'wifinet1'
 	option ssid 'AG'
 	option encryption 'psk2'
 	option key '21energyminer'
+	option disabled '1'
 

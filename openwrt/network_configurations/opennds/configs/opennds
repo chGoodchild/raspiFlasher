@@ -1,5 +1,19 @@
-
 config opennds
+    option enabled '1'
+    option gatewayinterface 'br-lan'  # Use your LAN interface
+    option gatewayaddress '192.168.2.1'  # Your router's IP address
+    option gatewayport '2050'
+    option authscript '/usr/lib/opennds/authmon.sh'
+    option preauthservice ''
+    option sessiontimeout '1800'
+    option idletimeout '600'
+    option clientsessions '50'
+    option preauth_timeout '5'
+    option debuglevel '2'
+    option faskey 'a0e0b94043ef2a9593966898ab3d2aa2f485efff3e3cb3c2fe7815d22b2ceee5'
+
+
+# config opennds
 	# enabled
 	# Default: 1 (enabled)
 	# Set to 0 to disable opennds
@@ -994,4 +1008,4 @@ config opennds
 	###########################################################################################
 
 
-	option faskey 'a0e0b94043ef2a9593966898ab3d2aa2f485efff3e3cb3c2fe7815d22b2ceee5'
+	# option faskey 'a0e0b94043ef2a9593966898ab3d2aa2f485efff3e3cb3c2fe7815d22b2ceee5'

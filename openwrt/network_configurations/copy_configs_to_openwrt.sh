@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Prompt the user for the password
-read -sp "Enter password for root@192.168.8.181: " PASSWORD
+read -sp "Enter password for root@192.168.1.1: " PASSWORD
 echo
 
 # Define the OpenWrt device's IP address and the user
-OPENWRT_IP="192.168.8.181"
+OPENWRT_IP="192.168.1.1"
 USER="root"
 
 # Define the source directory where your local configuration files are stored
-SOURCE_DIR="./hotplug"
+SOURCE_DIR="./wifi_connected_gateway"
 
 # Define the destination directory on the OpenWrt device
 DEST_DIR="/etc/config"

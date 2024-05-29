@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define variables
-LOCAL_PATH="/home/pachai/Documents/raspiFlasher/openwrt/network_configurations"
+LOCAL_PATH="/home/pachai/Documents/raspiFlasher/openwrt/network_configurations/opennds"
 REMOTE_USER="root"
-REMOTE_HOST="192.168.1.1"
+REMOTE_HOST="192.168.2.1"
 REMOTE_PATH="/etc/config"
 
 # Define the mapping of local files to remote files
