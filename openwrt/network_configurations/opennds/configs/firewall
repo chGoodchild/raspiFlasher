@@ -24,6 +24,13 @@ config zone
 	list network 'wwan'
 
 config rule
+    option name 'Allow-DNS'
+    option src 'lan'
+    option proto 'tcpudp'
+    option dest_port '53'
+    option target 'ACCEPT'
+
+config rule
 	option name 'Allow-SSH'
 	option src 'wan'
 	option proto 'tcp'
