@@ -94,7 +94,7 @@ config rule
 config rule
 	option name		Allow-ICMPv6-Forward
 	option src		wan
-	option dest		*
+	option dest		'*'
 	option proto		icmp
 	list icmp_type		echo-request
 	list icmp_type		echo-reply
@@ -126,16 +126,14 @@ config include 'opennds'
     option type 'script'
     option path '/usr/lib/opennds/restart.sh'
 
-config rule
-    option name 'Redirect-HTTP-to-Captive-Portal'
-    option src 'lan'
-    option proto 'tcp'
-    option src_dport '80'
-    option target 'DNAT'
-    option dest 'lan'
-    option dest_ip '192.168.8.231'
-    option dest_port '2050'
-
+config redirect
+    option name             'Redirect-HTTP-to-Captive-Portal'
+    option src              'lan'
+    option src_dport        '80'
+    option dest             'lan'
+    option dest_ip          '192.168.8.231'
+    option dest_port        '2050'
+    option proto            'tcp'
 
 ### EXAMPLE CONFIG SECTIONS
 # do not allow a specific ip to access wan
