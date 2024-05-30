@@ -21,8 +21,14 @@ config interface 'lan'
 config interface 'wwan'
 	option proto 'none'
 
+config device
+    option name 'eth0.3'  # Use VLAN ID 3
+    option type '8021q'
+    option ifname 'eth0'
+    option vid '3'
+
 config interface 'guest'
+    option device 'eth0.3'
     option proto 'static'
     option ipaddr '192.168.3.1'
     option netmask '255.255.255.0'
-    option device 'br-lan'
