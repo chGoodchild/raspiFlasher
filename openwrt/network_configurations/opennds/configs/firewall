@@ -127,6 +127,18 @@ config rule
 	option proto		udp
 	option target		ACCEPT
 
+config include 'opennds'
+    option type 'script'
+    option path '/usr/lib/opennds/restart.sh'
+
+config rule
+    option name 'Redirect-HTTP-to-Captive-Portal'
+    option src 'lan'
+    option proto 'tcp'
+    option dest_port '80'
+    option target 'DNAT'
+    option dest_ip '192.168.8.231'
+    option dest_port '2050'
 
 ### EXAMPLE CONFIG SECTIONS
 # do not allow a specific ip to access wan
