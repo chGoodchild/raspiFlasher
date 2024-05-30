@@ -21,8 +21,7 @@ config interface 'lan'
 config interface 'wwan'
 	option proto 'none'
 
-config device
-    option name 'eth0.3'  # Use VLAN ID 3
+config device 'eth0.3'
     option type '8021q'
     option ifname 'eth0'
     option vid '3'
