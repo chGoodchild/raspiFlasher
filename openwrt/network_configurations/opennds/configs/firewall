@@ -2,7 +2,7 @@ config defaults
 	option syn_flood	1
 	option input		ACCEPT
 	option output		ACCEPT
-	option forward		REJECT
+	option forward		ACCEPT
 
 config zone
 	option name		lan
