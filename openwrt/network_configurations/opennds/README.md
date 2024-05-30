@@ -1,0 +1,1 @@
+scp 99-update-opennds root@192.168.8.231:/etc/hotplug.d/iface/99-update-opennds

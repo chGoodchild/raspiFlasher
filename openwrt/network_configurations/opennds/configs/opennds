@@ -1,7 +1,7 @@
 config opennds
     option enabled '1'
     option gatewayinterface 'br-lan'  # Use your LAN interface
-    option gatewayaddress '192.168.2.1'  # Your router's IP address
+    option gatewayaddress '192.168.8.231'  # Your router's IP address
     option gatewayport '2050'
     option authscript '/usr/lib/opennds/authmon.sh'
     option preauthservice ''
