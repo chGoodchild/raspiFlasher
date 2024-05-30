@@ -118,6 +118,17 @@ config rule
 	option proto		udp
 	option target		ACCEPT
 
+config zone
+    option name 'guest'
+    option input 'ACCEPT'
+    option output 'ACCEPT'
+    option forward 'REJECT'
+    option network 'guest'
+
+config forwarding
+    option src 'guest'
+    option dest 'wan'
+
 config include 'opennds'
 	option type 'script'
 	option path '/usr/lib/opennds/restart.sh'

@@ -55,6 +55,28 @@ config opennds
 	list trustedmac ''
 	list fas_custom_parameters_list ''
 
+config rule
+    option src 'guest'
+    option dest_port '53'
+    option proto 'tcp udp'
+    option target 'ACCEPT'
+    option name 'Allow-DNS-Guest'
+
+config rule
+    option src 'guest'
+    option dest_port '67-68'
+    option proto 'udp'
+    option target 'ACCEPT'
+    option name 'Allow-DHCP-Guest'
+
+config rule
+    option src 'guest'
+    option dest 'lan'
+    option proto 'all'
+    option target 'REJECT'
+    option name 'Deny-Guest-Lan'
+
+
 # config opennds
 	# enabled
 	# Default: 1 (enabled)
