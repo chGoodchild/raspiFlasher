@@ -1,6 +1,6 @@
 config opennds
     option enabled '1'
-    option gatewayname 'openNDS'
+    option gatewayname 'guest'
     option gatewayfqdn 'status.client'
     option statuspath '/usr/lib/opennds/client_params.sh'
     option gatewayinterface 'guest'
@@ -28,7 +28,7 @@ config opennds
     option dhcp_default_url_enable '1'
     option gatewayport '2050'
     option fasport '0'
-    option login_option_enabled '0'
+    option login_option_enabled '1'
     option use_outdated_mhd '0'
     option max_page_size '10240'
     option max_log_entries '100'
