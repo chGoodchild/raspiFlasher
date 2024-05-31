@@ -1,9 +1,9 @@
-config opennds
+config opennds 'config'
     option enabled '1'
     option gatewayname 'guest'
     option gatewayfqdn 'status.client'
     option statuspath '/usr/lib/opennds/client_params.sh'
-    option gatewayinterface 'guest'
+    option gatewayinterface 'eth0.3'
     option gateway_iprange '0.0.0.0/0'
     option faskey 'a0e0b94043ef2a9593966898ab3d2aa2f485efff3e3cb3c2fe7815d22b2ceee5'
     option log_mountpoint '/tmp'
