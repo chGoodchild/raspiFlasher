@@ -39,6 +39,10 @@ config odhcpd 'odhcpd'
     option leasetrigger '/usr/sbin/odhcpd-update'
     option loglevel '4'
 
+config dhcp 'wwan'
+    option interface 'wwan'
+    option ignore '1'
+
 config dnsmasq
     option logdhcp '1'
 
