@@ -32,3 +32,16 @@ opkg update
 opkg install kmod-nf-nat kmod-ipt-tproxy
 
 
+
+vi /etc/opkg/distfeeds.conf
+
+# Set correct target and architecture for your system.
+src/gz openwrt_core https://downloads.openwrt.org/releases/23.05.0/targets/bcm27xx/bcm2711/packages
+src/gz openwrt_base https://downloads.openwrt.org/releases/23.05.0/packages/aarch64_cortex-a72/base
+src/gz openwrt_luci https://downloads.openwrt.org/releases/23.05.0/packages/aarch64_cortex-a72/luci
+src/gz openwrt_packages https://downloads.openwrt.org/releases/23.05.0/packages/aarch64_cortex-a72/packages
+src/gz openwrt_routing https://downloads.openwrt.org/releases/23.05.0/packages/aarch64_cortex-a72/routing
+src/gz openwrt_telephony https://downloads.openwrt.org/releases/23.05.0/packages/aarch64_cortex-a72/telephony
+
+
+
