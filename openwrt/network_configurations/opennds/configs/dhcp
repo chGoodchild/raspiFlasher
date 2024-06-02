@@ -42,10 +42,6 @@ config odhcpd 'odhcpd'
 config dnsmasq
     option logdhcp '1'
 
-config dhcp 'wwan'
-    option interface 'wwan'
-    option ignore '1'
-
 config dhcp 'guest'
     option interface 'guest'
     option start '100'

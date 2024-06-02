@@ -17,9 +17,6 @@ config interface 'lan'
     option device 'br-lan'
     option proto 'dhcp'
 
-config interface 'wwan'
-    option proto 'none'
-
 config device 'eth0.3'
     option type '8021q'
     option ifname 'eth0'
